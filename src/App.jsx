@@ -1,26 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { Routes, Route, Link, Navigate } from "react-router-dom";
 import RunList from "./components/RunList";
 import RunForm from "./components/RunForm";
 import Profile from "./components/Profile";
-import { Routes, Route, Link } from "react-router-dom"; // ❌ Removed BrowserRouter here
-import Login from "./components/Login";
-import Register from "./components/Register";
+import Auth from "./pages/Auth"; // ✅ New Auth Page
 import "./App.css";
 
 function App() {
   const [user] = useAuthState(auth);
   const [selectedRun, setSelectedRun] = useState(null);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      auth.onAuthStateChanged((authUser) => {
+        if (!authUser) {
+          localStorage.removeItem("user");
+        }
+      });
+    }
+  }, []);
+
   const handleLogout = () => {
-    auth.signOut();
+    auth.signOut().then(() => {
+      localStorage.removeItem("user");
+    });
   };
 
   return (
     <div className='app'>
-      {" "}
-      {/* ✅ Removed the redundant <Router> */}
       {user ? (
         <>
           <header>
@@ -61,20 +71,9 @@ function App() {
         </>
       ) : (
         <Routes>
-          <Route path='/login' element={<Login />} />
-          <Route path='/register' element={<Register />} />
-          <Route
-            path='*'
-            element={
-              <div>
-                <h2>Welcome to Jog Tracker</h2>
-                <p>
-                  <Link to='/login'>Login</Link> or{" "}
-                  <Link to='/register'>Register</Link> to save your runs!
-                </p>
-              </div>
-            }
-          />
+          {/* Redirect all unauthenticated users to Auth page */}
+          <Route path='/auth' element={<Auth />} />
+          <Route path='*' element={<Navigate to='/auth' replace />} />
         </Routes>
       )}
     </div>
