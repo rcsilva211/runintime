@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import RunList from "./components/RunList";
 import RunForm from "./components/RunForm";
 import Profile from "./components/Profile";
-import Auth from "./pages/Auth"; // ✅ New Auth Page
+import Auth from "./pages/Auth";
+import Navbar from "./components/Navbar"; // ✅ Import Navbar
 import "./App.css";
 
 function App() {
@@ -31,51 +32,46 @@ function App() {
 
   return (
     <div className='app'>
-      {user ? (
-        <>
-          <header>
-            <nav>
-              <ul>
-                <li>
-                  <Link to='/'>Home</Link>
-                </li>
-                <li>
-                  <Link to='/profile'>Profile</Link>
-                </li>
-                <li>
-                  <button onClick={handleLogout}>Logout</button>
-                </li>
-              </ul>
-            </nav>
-          </header>
-          <Routes>
-            <Route
-              path='/'
-              element={
-                <div className='container'>
-                  <div className='left-side'>
-                    <RunList setSelectedRun={setSelectedRun} user={user} />
-                  </div>
-                  <div className='right-side'>
-                    <RunForm
-                      selectedRun={selectedRun}
-                      setSelectedRun={setSelectedRun}
-                      user={user}
-                    />
-                  </div>
-                </div>
-              }
-            />
-            <Route path='/profile' element={<Profile user={user} />} />
-          </Routes>
-        </>
-      ) : (
+      {user && <Navbar user={user} handleLogout={handleLogout} />}{" "}
+      <div className={user ? "mt-16" : ""}>
+        {" "}
         <Routes>
-          {/* Redirect all unauthenticated users to Auth page */}
-          <Route path='/auth' element={<Auth />} />
-          <Route path='*' element={<Navigate to='/auth' replace />} />
+          {user ? (
+            <>
+              <Route
+                path='/'
+                element={
+                  <div className='flex h-screen w-full overflow-hidden'>
+                    {/* Left Sidebar (Run List) */}
+                    <div className='w-1/5 h-screen bg-gray-900 flex flex-col overflow-hidden'>
+                      <div className='h-full overflow-y-auto'>
+                        <RunList setSelectedRun={setSelectedRun} user={user} />
+                      </div>
+                    </div>
+
+                    {/* Right Content (Run Form) */}
+                    <div className='flex-1 flex items-center justify-center p-6'>
+                      <RunForm
+                        selectedRun={selectedRun}
+                        setSelectedRun={setSelectedRun}
+                        user={user}
+                      />
+                    </div>
+                  </div>
+                }
+              />
+
+              <Route path='/profile' element={<Profile user={user} />} />
+              <Route path='*' element={<Navigate to='/' replace />} />
+            </>
+          ) : (
+            <>
+              <Route path='/auth' element={<Auth />} />
+              <Route path='*' element={<Navigate to='/auth' replace />} />
+            </>
+          )}
         </Routes>
-      )}
+      </div>
     </div>
   );
 }
