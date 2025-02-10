@@ -1,45 +1,42 @@
 import { useEffect, useState } from "react";
 import { db } from "../../firebase";
 import PropTypes from "prop-types";
-import { useDispatch, useSelector } from "react-redux";
-import { setRuns } from "../redux/runsSlice";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { motion } from "framer-motion";
+import { FaPlus } from "react-icons/fa";
 
 const RunList = ({ setSelectedRun, user }) => {
   const [loading, setLoading] = useState(true);
-  const runs = useSelector((state) => state.runs.runs);
-  const dispatch = useDispatch();
+  const [runs, setRuns] = useState([]);
   const [activeRun, setActiveRun] = useState(null);
 
   useEffect(() => {
-    const fetchRuns = async () => {
-      setLoading(true);
-      if (user) {
-        const runsQuery = query(
-          collection(db, "runs"),
-          where("userId", "==", user.uid)
-        );
-        const querySnapshot = await getDocs(runsQuery);
+    if (user) {
+      const runsQuery = query(
+        collection(db, "runs"),
+        where("userId", "==", user.uid)
+      );
+
+      // ✅ Real-time Firestore updates
+      const unsubscribe = onSnapshot(runsQuery, (querySnapshot) => {
         const runsData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
 
-        // Sort runs by date (newest first)
+        // Sort runs by newest first
         runsData.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setRuns(runsData);
+        setLoading(false);
+      });
 
-        dispatch(setRuns(runsData));
-      }
-      setLoading(false);
-    };
-
-    fetchRuns();
-  }, [dispatch, user]);
+      return () => unsubscribe(); // Cleanup listener
+    }
+  }, [user]);
 
   if (loading) {
     return (
-      <div className='text-center text-gray-500 text-lg animate-pulse'>
+      <div className='text-center mt-12 bg-white text-lg animate-pulse'>
         Loading runs...
       </div>
     );
@@ -69,16 +66,32 @@ const RunList = ({ setSelectedRun, user }) => {
   }, {});
 
   return (
-    <div className='w-full h-full max-w-lg mx-auto bg-white p-6 shadow-lg flex flex-col overflow-hidden'>
-      <h2 className='text-2xl font-bold text-gray-900 mb-4'>Run History</h2>
+    <div className='w-full h-full max-w-lg mx-auto bg-white p-6 shadow-lg flex flex-col relative overflow-hidden'>
+      {/* Header with Add Button */}
+      <div className='sticky top-0 bg-white z-10 pb-2 flex items-center justify-between'>
+        <h2 className='text-2xl font-bold text-gray-900'>Run History</h2>
+
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            setSelectedRun(null);
+            setActiveRun(null);
+          }}
+          className='bg-red-500 text-white py-2 px-2 rounded-md text-md shadow-lg hover:bg-red-600 transition-all'
+        >
+          <FaPlus className='text-lg' />
+        </motion.button>
+      </div>
 
       {/* Scrollable Runs List */}
-      <div className='flex-1 overflow-y-auto'>
-        {groupedRuns.length === 0 && (
-          <p className='text-black text-center mt-2'>
-            No runs recorded this month.
-          </p>
+      <div className='flex-1 overflow-y-auto pr-2'>
+        {runs.length === 0 && (
+          <div className='text-center text-gray-500 text-lg'>
+            No runs available. Start running now!
+          </div>
         )}
+
         {Object.entries(groupedRuns).map(([month, monthRuns]) => (
           <div key={month} className='mb-4'>
             <h3 className='text-lg font-semibold text-gray-800 border-b-2 border-gray-300 pb-1'>

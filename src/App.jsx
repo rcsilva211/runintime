@@ -34,7 +34,6 @@ function App() {
     <div className='app'>
       {user && <Navbar user={user} handleLogout={handleLogout} />}{" "}
       <div className={user ? "mt-16" : ""}>
-        {" "}
         <Routes>
           {user ? (
             <>
