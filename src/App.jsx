@@ -6,12 +6,16 @@ import RunList from "./components/RunList";
 import RunForm from "./components/RunForm";
 import Profile from "./components/Profile";
 import Auth from "./pages/Auth";
-import Navbar from "./components/Navbar"; // ✅ Import Navbar
+import Navbar from "./components/Navbar";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaChevronRight } from "react-icons/fa"; // ✅ Sidebar Open Button
 import "./App.css";
 
 function App() {
   const [user] = useAuthState(auth);
   const [selectedRun, setSelectedRun] = useState(null);
+  const [runs, setRuns] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -32,7 +36,8 @@ function App() {
 
   return (
     <div className='app'>
-      {user && <Navbar user={user} handleLogout={handleLogout} />}{" "}
+      {user && <Navbar user={user} handleLogout={handleLogout} />}
+
       <div className={user ? "mt-16" : ""}>
         <Routes>
           {user ? (
@@ -41,10 +46,45 @@ function App() {
                 path='/'
                 element={
                   <div className='flex h-screen w-full overflow-hidden'>
-                    {/* Left Sidebar (Run List) */}
-                    <div className='w-1/5 h-screen bg-gray-900 flex flex-col overflow-hidden'>
+                    {/* ✅ Sidebar Open Button */}
+                    <button
+                      onClick={() => setSidebarOpen(true)}
+                      className='absolute top-4 left-4 md:hidden bg-gray-800 text-white p-2 rounded-md'
+                    >
+                      <FaChevronRight className='text-xl' />
+                    </button>
+
+                    {/* ✅ Collapsible Sidebar */}
+                    <AnimatePresence>
+                      {sidebarOpen && (
+                        <motion.div
+                          initial={{ x: "-100%" }}
+                          animate={{ x: 0 }}
+                          exit={{ x: "-100%" }}
+                          transition={{ duration: 0.3 }}
+                          className='fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden'
+                          onClick={() => setSidebarOpen(false)}
+                        >
+                          <RunList
+                            setSelectedRun={setSelectedRun}
+                            user={user}
+                            runs={runs}
+                            setRuns={setRuns}
+                            closeSidebar={() => setSidebarOpen(false)}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Sidebar for Desktop */}
+                    <div className='hidden md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
                       <div className='h-full overflow-y-auto'>
-                        <RunList setSelectedRun={setSelectedRun} user={user} />
+                        <RunList
+                          setSelectedRun={setSelectedRun}
+                          user={user}
+                          runs={runs}
+                          setRuns={setRuns}
+                        />
                       </div>
                     </div>
 
@@ -54,6 +94,9 @@ function App() {
                         selectedRun={selectedRun}
                         setSelectedRun={setSelectedRun}
                         user={user}
+                        addRunToList={(newRun) =>
+                          setRuns((prevRuns) => [newRun, ...prevRuns])
+                        }
                       />
                     </div>
                   </div>

@@ -14,13 +14,13 @@ const Auth = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); // Store authentication errors
-  const [shake, setShake] = useState(false); // Control shake animation
+  const [error, setError] = useState("");
+  const [shake, setShake] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Reset error before new attempt
+    setError("");
 
     try {
       if (isRegister) {
@@ -33,7 +33,7 @@ const Auth = () => {
       console.error("Authentication failed:", error.message);
       setError("Invalid email or password.");
       setShake(true);
-      setTimeout(() => setShake(false), 500); // Reset shake effect after animation
+      setTimeout(() => setShake(false), 500);
     }
   };
 
@@ -92,7 +92,7 @@ const Auth = () => {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  setError(""); // Clear error when user types
+                  setError("");
                 }}
                 required
                 className={`w-full px-4 py-2 border ${
