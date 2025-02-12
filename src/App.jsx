@@ -8,7 +8,7 @@ import Profile from "./components/Profile";
 import Auth from "./pages/Auth";
 import Navbar from "./components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaChevronRight } from "react-icons/fa"; // ✅ Sidebar Open Button
+import { FaChevronRight } from "react-icons/fa";
 import "./App.css";
 
 function App() {
@@ -38,7 +38,7 @@ function App() {
     <div className='app'>
       {user && <Navbar user={user} handleLogout={handleLogout} />}
 
-      <div className={user ? "mt-16" : ""}>
+      <div className={user ? "pt-16" : ""}>
         <Routes>
           {user ? (
             <>
@@ -46,7 +46,6 @@ function App() {
                 path='/'
                 element={
                   <div className='flex h-screen w-full overflow-hidden'>
-                    {/* ✅ Sidebar Open Button */}
                     <button
                       onClick={() => setSidebarOpen(true)}
                       className='absolute top-4 left-4 md:hidden bg-gray-800 text-white p-2 rounded-md'
@@ -54,7 +53,6 @@ function App() {
                       <FaChevronRight className='text-xl' />
                     </button>
 
-                    {/* ✅ Collapsible Sidebar */}
                     <AnimatePresence>
                       {sidebarOpen && (
                         <motion.div
@@ -77,7 +75,7 @@ function App() {
                     </AnimatePresence>
 
                     {/* Sidebar for Desktop */}
-                    <div className='hidden md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
+                    <div className='md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
                       <div className='h-full overflow-y-auto'>
                         <RunList
                           setSelectedRun={setSelectedRun}
