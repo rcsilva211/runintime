@@ -8,7 +8,7 @@ import Profile from "./components/Profile";
 import Auth from "./pages/Auth";
 import Navbar from "./components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaChevronRight } from "react-icons/fa";
+import { FaBars, FaPlus } from "react-icons/fa"; // Updated icons
 import "./App.css";
 
 function App() {
@@ -46,13 +46,15 @@ function App() {
                 path='/'
                 element={
                   <div className='flex h-screen w-full overflow-hidden'>
+                    {/* ✅ Mobile Hamburger Button (Top Left, Below Navbar) */}
                     <button
                       onClick={() => setSidebarOpen(true)}
-                      className='absolute top-4 left-4 md:hidden bg-gray-800 text-white p-2 rounded-md'
+                      className='absolute top-28 left-4 md:hidden bg-red-600 text-white p-2 rounded-md shadow-lg'
                     >
-                      <FaChevronRight className='text-xl' />
+                      <FaBars className='text-xl' />
                     </button>
 
+                    {/* ✅ Sidebar Overlay for Mobile */}
                     <AnimatePresence>
                       {sidebarOpen && (
                         <motion.div
@@ -64,7 +66,10 @@ function App() {
                           onClick={() => setSidebarOpen(false)}
                         >
                           <RunList
-                            setSelectedRun={setSelectedRun}
+                            setSelectedRun={(run) => {
+                              setSelectedRun(run);
+                              setSidebarOpen(false); // Close sidebar on selection
+                            }}
                             user={user}
                             runs={runs}
                             setRuns={setRuns}
@@ -74,8 +79,8 @@ function App() {
                       )}
                     </AnimatePresence>
 
-                    {/* Sidebar for Desktop */}
-                    <div className='md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
+                    {/* ✅ Sidebar for Desktop (Always Visible) */}
+                    <div className='hidden md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
                       <div className='h-full overflow-y-auto'>
                         <RunList
                           setSelectedRun={setSelectedRun}
@@ -86,7 +91,7 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Right Content (Run Form) */}
+                    {/* ✅ Right Content (Run Form) */}
                     <div className='flex-1 flex items-center justify-center p-6'>
                       <RunForm
                         selectedRun={selectedRun}
@@ -96,6 +101,22 @@ function App() {
                           setRuns((prevRuns) => [newRun, ...prevRuns])
                         }
                       />
+                    </div>
+
+                    {/* ✅ Floating Buttons (Bottom Right) */}
+                    <div className='fixed bottom-4 right-4 flex flex-col space-y-3 items-end'>
+                      {/* Add Run Button */}
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          setSelectedRun(null);
+                          setSidebarOpen(false);
+                        }}
+                        className='bg-red-500 text-white p-4 rounded-full shadow-lg hover:bg-red-600 transition-all'
+                      >
+                        <FaPlus className='text-2xl' />
+                      </motion.button>
                     </div>
                   </div>
                 }
