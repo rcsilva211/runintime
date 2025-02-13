@@ -4,11 +4,18 @@ import PropTypes from "prop-types";
 import { doc, setDoc, addDoc, collection } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 
+const sports = [
+  { label: "🏃‍➡️ - Running", value: "running", emoji: "🏃‍♂️" },
+  { label: "🛼 - Inline skating", value: "inline_skating", emoji: "🛼" },
+  { label: "🚲 - Cycling", value: "cycling", emoji: "🚲" },
+];
+
 const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
   const [formData, setFormData] = useState({
     date: "",
     distance: "",
     time: "",
+    sport: sports[0].value, // Default to Running
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -24,13 +31,13 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
   }, [selectedRun]);
 
   const resetForm = () => {
-    setFormData({ date: "", distance: "", time: "" });
+    setFormData({ date: "", distance: "", time: "", sport: sports[0].value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { date, distance, time } = formData;
+    const { date, distance, time, sport } = formData;
 
     if (!distance || distance <= 0 || !time || time <= 0) {
       alert("Please provide valid distance and time values.");
@@ -42,6 +49,7 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
       distance: parseFloat(distance),
       time: parseFloat(time),
       speed: (distance / (time / 60)).toFixed(2),
+      sport,
       userId: user?.uid || "unknown",
     };
 
@@ -53,25 +61,23 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
       }
       resetForm();
       setSelectedRun(null);
-      clearActiveRun(); // ✅ Remove active state in RunList
+      clearActiveRun();
     } catch (error) {
       console.error("Error saving the run:", error);
       alert("An error occurred while saving the run.");
     }
   };
 
-  /** ✅ Handle Click Outside the Form to Deselect */
   const handleOutsideClick = (e) => {
     if (!e.target.closest(".form-card") && isEditing) {
       setSelectedRun(null);
-      clearActiveRun(); // ✅ Remove active class in RunList
+      clearActiveRun();
       resetForm();
     }
   };
 
   return (
     <AnimatePresence mode='wait'>
-      {/* ✅ Background Overlay to Detect Clicks */}
       {isEditing && (
         <motion.div
           className='fixed inset-0 bg-transparent z-30'
@@ -85,9 +91,8 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: -20, opacity: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className='bg-white p-6 rounded-lg shadow-lg w-full max-w-lg mx-auto relative z-40 form-card'
+        className='bg-white p-6 rounded-lg shadow-lg w-full max-w-lg mx-auto relative z-30 form-card'
       >
-        {/* ✅ Animated Title */}
         <motion.h2
           key={selectedRun ? "editing-title" : "add-title"}
           initial={{ y: -10, opacity: 0 }}
@@ -98,7 +103,6 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
           {selectedRun ? "Edit Run" : "Add New Run"}
         </motion.h2>
 
-        {/* ✅ Animated "Editing Run from..." Message */}
         {selectedRun && (
           <motion.p
             key={selectedRun.date}
@@ -114,7 +118,6 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* ✅ Date Field */}
           <label htmlFor='date' className='block text-gray-700 font-medium'>
             Date:
           </label>
@@ -124,10 +127,9 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             required
-            className='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none text-white placeholder:text-white mb-2'
+            className='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none mb-2'
           />
 
-          {/* ✅ Distance Field */}
           <label htmlFor='distance' className='block text-gray-700 font-medium'>
             Distance (km):
           </label>
@@ -137,14 +139,16 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
             placeholder='Enter distance (km)'
             value={formData.distance}
             onChange={(e) =>
-              setFormData({ ...formData, distance: e.target.value })
+              setFormData({
+                ...formData,
+                distance: e.target.value < 0 ? 0 : e.target.value,
+              })
             }
             required
             step='0.01'
-            className='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none text-white placeholder:text-white mb-2'
+            className='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none mb-2'
           />
 
-          {/* ✅ Time Field */}
           <label htmlFor='time' className='block text-gray-700 font-medium'>
             Time (minutes):
           </label>
@@ -153,11 +157,38 @@ const RunForm = ({ selectedRun, setSelectedRun, user, clearActiveRun }) => {
             type='number'
             placeholder='Enter time (minutes)'
             value={formData.time}
-            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                time: e.target.value < 0 ? 0 : e.target.value,
+              })
+            }
             required
             step='0.1'
-            className='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none text-white placeholder:text-white mb-6'
+            className='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none mb-6'
           />
+
+          {/* ✅ Select Sport */}
+          <label htmlFor='sport' className='block text-gray-700 font-medium'>
+            Select Sport:
+          </label>
+          <motion.select
+            id='sport'
+            value={formData.sport}
+            onChange={(e) =>
+              setFormData({ ...formData, sport: e.target.value })
+            }
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none mb-6'
+          >
+            {sports.map((sport) => (
+              <option key={sport.value} value={sport.value}>
+                {sport.label}
+              </option>
+            ))}
+          </motion.select>
 
           {/* ✅ Action Buttons */}
           <div className='flex justify-between'>
@@ -192,7 +223,7 @@ RunForm.propTypes = {
   selectedRun: PropTypes.object,
   setSelectedRun: PropTypes.func.isRequired,
   user: PropTypes.object,
-  clearActiveRun: PropTypes.func.isRequired, // ✅ Ensures the function is passed in
+  clearActiveRun: PropTypes.func.isRequired,
 };
 
 export default RunForm;

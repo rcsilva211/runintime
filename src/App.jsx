@@ -34,6 +34,16 @@ function App() {
     });
   };
 
+  /** ✅ Close sidebar */
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
+  /** ✅ Clear selected run */
+  const clearActiveRun = () => {
+    setSelectedRun(null);
+  };
+
   return (
     <div className='app'>
       {user && <Navbar user={user} handleLogout={handleLogout} />}
@@ -63,17 +73,15 @@ function App() {
                           exit={{ x: "-100%" }}
                           transition={{ duration: 0.3 }}
                           className='fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden'
-                          onClick={() => setSidebarOpen(false)}
+                          onClick={closeSidebar} // ✅ Now properly closes sidebar
                         >
                           <RunList
-                            setSelectedRun={(run) => {
-                              setSelectedRun(run);
-                              setSidebarOpen(false);
-                            }}
+                            setSelectedRun={setSelectedRun}
                             user={user}
                             runs={runs}
                             setRuns={setRuns}
-                            closeSidebar={() => setSidebarOpen(false)}
+                            closeSidebar={closeSidebar} // ✅ Pass closeSidebar here
+                            isOpen={sidebarOpen} // ✅ Pass isOpen to RunList
                           />
                         </motion.div>
                       )}
@@ -87,6 +95,8 @@ function App() {
                           user={user}
                           runs={runs}
                           setRuns={setRuns}
+                          closeSidebar={closeSidebar} // ✅ Pass closeSidebar here
+                          isOpen={sidebarOpen} // ✅ Pass isOpen to RunList
                         />
                       </div>
                     </div>
@@ -100,6 +110,7 @@ function App() {
                         addRunToList={(newRun) =>
                           setRuns((prevRuns) => [newRun, ...prevRuns])
                         }
+                        clearActiveRun={clearActiveRun} // ✅ Pass clearActiveRun to RunForm
                       />
                     </div>
 

@@ -38,7 +38,7 @@ const Navbar = ({ user, handleLogout }) => {
 
       {/* ✅ Profile Icon / Sidebar Toggle */}
       <button
-        className='text-gray-700 text-3xl ml-auto p-2'
+        className='bg-red-600 text-3xl ml-auto p-2'
         onClick={() => setSidebarOpen(!sidebarOpen)}
       >
         {profilePicture ? (
