@@ -8,7 +8,7 @@ import Profile from "./components/Profile";
 import Auth from "./pages/Auth";
 import Navbar from "./components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaBars, FaPlus } from "react-icons/fa"; // Updated icons
+import { FaBars, FaPlus } from "react-icons/fa";
 import "./App.css";
 
 function App() {
@@ -68,7 +68,7 @@ function App() {
                           <RunList
                             setSelectedRun={(run) => {
                               setSelectedRun(run);
-                              setSidebarOpen(false); // Close sidebar on selection
+                              setSidebarOpen(false);
                             }}
                             user={user}
                             runs={runs}
@@ -80,7 +80,7 @@ function App() {
                     </AnimatePresence>
 
                     {/* ✅ Sidebar for Desktop (Always Visible) */}
-                    <div className='hidden md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
+                    <div className='md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
                       <div className='h-full overflow-y-auto'>
                         <RunList
                           setSelectedRun={setSelectedRun}

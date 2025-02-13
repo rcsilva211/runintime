@@ -12,7 +12,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaTimes } from "react-icons/fa";
 
-const RunList = ({ setSelectedRun, user, closeSidebar, openSidebar }) => {
+const RunList = ({ setSelectedRun, user, closeSidebar }) => {
   const [loading, setLoading] = useState(true);
   const [runs, setRuns] = useState([]);
   const [activeRun, setActiveRun] = useState(null);
@@ -74,18 +74,27 @@ const RunList = ({ setSelectedRun, user, closeSidebar, openSidebar }) => {
     return acc;
   }, {});
 
+  /** ✅ Handle Click Outside Runs to Deselect */
+  const handleBackgroundClick = (e) => {
+    // Avoid deselection when clicking inside a run item
+    if (e.target.closest(".run-item")) return;
+    setSelectedRun(null);
+    setActiveRun(null);
+  };
+
   return (
     <>
-      {/* ✅ Sidebar Container (Full height on mobile) */}
+      {/* ✅ Sidebar Container (Attached below navbar) */}
       <motion.div
         initial={{ x: "-100%" }}
         animate={{ x: 0 }}
         exit={{ x: "-100%" }}
         transition={{ duration: 0.3 }}
-        className='fixed inset-0 bg-white shadow-lg z-50 flex flex-col h-screen md:relative md:w-full md:max-w-lg'
+        className='fixed top-4 left-0 w-full bg-white shadow-lg z-40 flex flex-col h-[calc(100vh-4rem)] md:relative md:w-full md:max-w-lg'
+        onClick={handleBackgroundClick} // ✅ Deselect when clicking outside
       >
         {/* ✅ Header with Close Button */}
-        <div className='sticky top-0 bg-white z-10 p-4 flex items-center justify-between border-b'>
+        <div className='sticky top-0 bg-white p-4 flex items-center justify-between border-b'>
           <h2 className='text-2xl font-bold text-gray-900'>Run History</h2>
 
           {/* ✅ Close Button (Mobile Only) */}
@@ -117,12 +126,13 @@ const RunList = ({ setSelectedRun, user, closeSidebar, openSidebar }) => {
                     key={run.id || run.date}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevents triggering background click
                       setSelectedRun(run);
                       setActiveRun(run.id);
                       closeSidebar(); // ✅ Close sidebar when selecting a run on mobile
                     }}
-                    className={`relative p-4 rounded-lg shadow-md cursor-pointer transition-all 
+                    className={`relative p-4 rounded-lg shadow-md cursor-pointer transition-all run-item 
                       ${
                         activeRun === run.id
                           ? "bg-red-600 text-white"
@@ -211,7 +221,6 @@ RunList.propTypes = {
   setSelectedRun: PropTypes.func.isRequired,
   user: PropTypes.object,
   closeSidebar: PropTypes.func,
-  openSidebar: PropTypes.func,
 };
 
 export default RunList;
