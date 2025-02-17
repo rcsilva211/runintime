@@ -1,16 +1,21 @@
 import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import RunList from "./components/RunList";
 import RunForm from "./components/RunForm";
 import Profile from "./components/Profile";
-import Auth from "./pages/Auth"; // ✅ New Auth Page
+import Auth from "./pages/Auth";
+import Navbar from "./components/Navbar";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaBars, FaPlus } from "react-icons/fa";
 import "./App.css";
 
 function App() {
   const [user] = useAuthState(auth);
   const [selectedRun, setSelectedRun] = useState(null);
+  const [runs, setRuns] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -29,53 +34,108 @@ function App() {
     });
   };
 
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
+  const clearActiveRun = () => {
+    setSelectedRun(null);
+  };
+
   return (
     <div className='app'>
-      {user ? (
-        <>
-          <header>
-            <nav>
-              <ul>
-                <li>
-                  <Link to='/'>Home</Link>
-                </li>
-                <li>
-                  <Link to='/profile'>Profile</Link>
-                </li>
-                <li>
-                  <button onClick={handleLogout}>Logout</button>
-                </li>
-              </ul>
-            </nav>
-          </header>
-          <Routes>
-            <Route
-              path='/'
-              element={
-                <div className='container'>
-                  <div className='left-side'>
-                    <RunList setSelectedRun={setSelectedRun} user={user} />
-                  </div>
-                  <div className='right-side'>
-                    <RunForm
-                      selectedRun={selectedRun}
-                      setSelectedRun={setSelectedRun}
-                      user={user}
-                    />
-                  </div>
-                </div>
-              }
-            />
-            <Route path='/profile' element={<Profile user={user} />} />
-          </Routes>
-        </>
-      ) : (
+      {user && <Navbar user={user} handleLogout={handleLogout} />}
+
+      <div className={user ? "pt-16" : ""}>
         <Routes>
-          {/* Redirect all unauthenticated users to Auth page */}
-          <Route path='/auth' element={<Auth />} />
-          <Route path='*' element={<Navigate to='/auth' replace />} />
+          {user ? (
+            <>
+              <Route
+                path='/'
+                element={
+                  <div className='flex h-screen w-full overflow-hidden'>
+                    <button
+                      onClick={() => setSidebarOpen(true)}
+                      className='absolute top-28 left-4 md:hidden bg-red-600 text-white p-2 rounded-md shadow-lg'
+                    >
+                      <FaBars className='text-xl' />
+                    </button>
+
+                    <AnimatePresence>
+                      {sidebarOpen && (
+                        <motion.div
+                          initial={{ x: "-100%" }}
+                          animate={{ x: 0 }}
+                          exit={{ x: "-100%" }}
+                          transition={{ duration: 0.3 }}
+                          className='fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden'
+                          onClick={closeSidebar}
+                        >
+                          <RunList
+                            setSelectedRun={setSelectedRun}
+                            user={user}
+                            runs={runs}
+                            setRuns={setRuns}
+                            closeSidebar={closeSidebar}
+                            isOpen={sidebarOpen}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div className='md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
+                      <div className='h-full overflow-y-auto'>
+                        <RunList
+                          setSelectedRun={setSelectedRun}
+                          user={user}
+                          runs={runs}
+                          setRuns={setRuns}
+                          closeSidebar={closeSidebar}
+                          isOpen={sidebarOpen}
+                        />
+                      </div>
+                    </div>
+
+                    <div className='flex-1 flex items-center justify-center p-6'>
+                      <RunForm
+                        selectedRun={selectedRun}
+                        setSelectedRun={setSelectedRun}
+                        user={user}
+                        addRunToList={(newRun) =>
+                          setRuns((prevRuns) => [newRun, ...prevRuns])
+                        }
+                        clearActiveRun={clearActiveRun}
+                      />
+                    </div>
+
+                    <div className='fixed bottom-4 right-4 flex flex-col space-y-3 items-end'>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          setSelectedRun(null);
+                          setSidebarOpen(false);
+                        }}
+                        className='bg-red-500 text-white p-4 rounded-full shadow-lg hover:bg-red-600 transition-all'
+                      >
+                        <FaPlus className='text-2xl' />
+                      </motion.button>
+                    </div>
+                  </div>
+                }
+              />
+
+              <Route path='/profile' element={<Profile user={user} />} />
+              <Route path='*' element={<Navigate to='/' replace />} />
+            </>
+          ) : (
+            <>
+              <Route path='/auth' element={<Auth />} />
+              <Route path='*' element={<Navigate to='/auth' replace />} />
+            </>
+          )}
         </Routes>
-      )}
+      </div>
     </div>
   );
 }
