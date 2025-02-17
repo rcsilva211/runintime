@@ -71,7 +71,7 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
     if (!deleteRunId) return;
     try {
       await deleteDoc(doc(db, "runs", deleteRunId));
-      dispatch(setRuns(runs.filter((run) => run.id !== deleteRunId))); // Update Redux state
+      dispatch(setRuns(runs.filter((run) => run.id !== deleteRunId)));
     } catch (error) {
       console.error("Error deleting run:", error);
     }
@@ -159,11 +159,11 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
                               }, 100);
                             }}
                             className={`relative p-4 rounded-lg shadow-md cursor-pointer transition-all run-item 
-                            ${
-                              activeRun === run.id
-                                ? "bg-red-600 text-white"
-                                : "bg-gray-100 hover:bg-gray-300 text-black"
-                            }`}
+                    ${
+                      activeRun === run.id
+                        ? "bg-red-600 text-white"
+                        : "bg-gray-100 hover:bg-gray-300 text-black"
+                    }`}
                           >
                             {/* ✅ Delete Button */}
                             <motion.button
@@ -206,51 +206,52 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
               )}
             </div>
           </motion.div>
-
-          <AnimatePresence>
-            {deleteRunId && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className='fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4'
-                style={{ zIndex: 100 }}
-                onClick={() => setDeleteRunId(null)}
-              >
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  className='bg-white p-6 rounded-lg shadow-lg max-w-sm w-full'
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <h3 className='text-xl font-semibold text-gray-900'>
-                    Delete Run?
-                  </h3>
-                  <p className='text-gray-600 mt-2'>
-                    Are you sure you want to delete this run? This action cannot
-                    be undone.
-                  </p>
-                  <div className='flex justify-end mt-4 space-x-2'>
-                    <button
-                      onClick={() => setDeleteRunId(null)}
-                      className='px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition'
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={confirmDelete}
-                      className='px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition'
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </>
       )}
+
+      {/* ✅ Delete Confirmation Modal - Moved Here */}
+      <AnimatePresence>
+        {deleteRunId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className='fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4'
+            style={{ zIndex: 100 }}
+            onClick={() => setDeleteRunId(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className='bg-white p-6 rounded-lg shadow-lg max-w-sm w-full'
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className='text-xl font-semibold text-gray-900'>
+                Delete Run?
+              </h3>
+              <p className='text-gray-600 mt-2'>
+                Are you sure you want to delete this run? This action cannot be
+                undone.
+              </p>
+              <div className='flex justify-end mt-4 space-x-2'>
+                <button
+                  onClick={() => setDeleteRunId(null)}
+                  className='px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className='px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition'
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className='hidden top-8 md:flex md:flex-col md:relative md:max-w-lg sidebar'>
         <div className='sticky top-0 bg-white p-4 flex items-center justify-between border-b'>
