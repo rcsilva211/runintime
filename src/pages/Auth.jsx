@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { auth, provider } from "../../firebase";
+import { auth, provider, db } from "../../firebase";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
 } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore"; // Firestore imports
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import authIllustration from "../assets/auth-illustration.png";
@@ -12,22 +13,56 @@ import { motion } from "framer-motion";
 
 const Auth = () => {
   const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState(""); // New Name State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
   const navigate = useNavigate();
 
+  /** ✅ Handle Authentication */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
+    // ✅ Validation
+    if (isRegister && name.trim().length < 3) {
+      setError("Name must be at least 3 characters long.");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
+
     try {
+      let userCredential;
       if (isRegister) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const user = userCredential.user;
+
+        // ✅ Store user details in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          name: name.trim(),
+          email: email,
+          userId: user.uid,
+        });
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
       }
+
       navigate("/");
     } catch (error) {
       console.error("Authentication failed:", error.message);
@@ -39,7 +74,22 @@ const Auth = () => {
 
   const handleGoogleAuth = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // ✅ Reference to Firestore document
+      const userRef = doc(db, "users", user.uid);
+      const userSnapshot = await getDoc(userRef);
+
+      // ✅ If user doesn't exist in Firestore, save their details
+      if (!userSnapshot.exists()) {
+        await setDoc(userRef, {
+          name: user.displayName || "Google User",
+          email: user.email,
+          userId: user.uid,
+        });
+      }
+
       navigate("/");
     } catch (error) {
       console.error("Google authentication failed:", error.message);
@@ -60,7 +110,7 @@ const Auth = () => {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className='bg-white rounded-lg shadow-lg flex flex-col md:flex-row w-full max-w-4xl overflow-hidden'
       >
-        {/* Left Side - Login/Register Form */}
+        {/* ✅ Authentication Form */}
         <motion.div
           key={isRegister ? "register" : "login"}
           initial={{ x: isRegister ? 100 : -100, opacity: 0 }}
@@ -84,6 +134,26 @@ const Auth = () => {
             animate={shake ? { x: [-5, 5, -5, 5, 0] } : {}}
             transition={{ duration: 0.2 }}
           >
+            {/* ✅ Name Field (Only for Registration) */}
+            {isRegister && (
+              <div>
+                <label className='block text-gray-700 font-medium'>Name</label>
+                <input
+                  type='text'
+                  placeholder='Enter your name'
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className={`w-full px-4 py-2 border ${
+                    error ? "border-red-500" : "border-gray-300"
+                  } rounded-md focus:outline-none focus:ring-2 ${
+                    error ? "focus:ring-red-500" : "focus:ring-red-400"
+                  } bg-white text-gray-900`}
+                />
+              </div>
+            )}
+
+            {/* ✅ Email Field */}
             <div>
               <label className='block text-gray-700 font-medium'>Email</label>
               <input
@@ -103,6 +173,7 @@ const Auth = () => {
               />
             </div>
 
+            {/* ✅ Password Field */}
             <div>
               <label className='block text-gray-700 font-medium'>
                 Password
@@ -124,7 +195,7 @@ const Auth = () => {
               />
             </div>
 
-            {/* Error Message Display */}
+            {/* ✅ Error Message */}
             {error && (
               <motion.p
                 initial={{ opacity: 0 }}
@@ -135,6 +206,7 @@ const Auth = () => {
               </motion.p>
             )}
 
+            {/* ✅ Submit Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -145,6 +217,7 @@ const Auth = () => {
             </motion.button>
           </motion.form>
 
+          {/* ✅ Google Auth Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -155,6 +228,7 @@ const Auth = () => {
             {isRegister ? "Sign up with Google" : "Sign in with Google"}
           </motion.button>
 
+          {/* ✅ Switch Login/Register */}
           <p className='mt-4 text-center text-gray-500'>
             {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
             <motion.button
@@ -172,7 +246,7 @@ const Auth = () => {
           </p>
         </motion.div>
 
-        {/* Right Side - Illustration (Hidden on small screens) */}
+        {/* ✅ Side Illustration */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}

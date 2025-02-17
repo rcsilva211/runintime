@@ -34,12 +34,10 @@ function App() {
     });
   };
 
-  /** ✅ Close sidebar */
   const closeSidebar = () => {
     setSidebarOpen(false);
   };
 
-  /** ✅ Clear selected run */
   const clearActiveRun = () => {
     setSelectedRun(null);
   };
@@ -56,7 +54,6 @@ function App() {
                 path='/'
                 element={
                   <div className='flex h-screen w-full overflow-hidden'>
-                    {/* ✅ Mobile Hamburger Button (Top Left, Below Navbar) */}
                     <button
                       onClick={() => setSidebarOpen(true)}
                       className='absolute top-28 left-4 md:hidden bg-red-600 text-white p-2 rounded-md shadow-lg'
@@ -64,7 +61,6 @@ function App() {
                       <FaBars className='text-xl' />
                     </button>
 
-                    {/* ✅ Sidebar Overlay for Mobile */}
                     <AnimatePresence>
                       {sidebarOpen && (
                         <motion.div
@@ -73,21 +69,20 @@ function App() {
                           exit={{ x: "-100%" }}
                           transition={{ duration: 0.3 }}
                           className='fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden'
-                          onClick={closeSidebar} // ✅ Now properly closes sidebar
+                          onClick={closeSidebar}
                         >
                           <RunList
                             setSelectedRun={setSelectedRun}
                             user={user}
                             runs={runs}
                             setRuns={setRuns}
-                            closeSidebar={closeSidebar} // ✅ Pass closeSidebar here
-                            isOpen={sidebarOpen} // ✅ Pass isOpen to RunList
+                            closeSidebar={closeSidebar}
+                            isOpen={sidebarOpen}
                           />
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    {/* ✅ Sidebar for Desktop (Always Visible) */}
                     <div className='md:block md:w-1/4 h-screen bg-white flex flex-col overflow-hidden'>
                       <div className='h-full overflow-y-auto'>
                         <RunList
@@ -95,13 +90,12 @@ function App() {
                           user={user}
                           runs={runs}
                           setRuns={setRuns}
-                          closeSidebar={closeSidebar} // ✅ Pass closeSidebar here
-                          isOpen={sidebarOpen} // ✅ Pass isOpen to RunList
+                          closeSidebar={closeSidebar}
+                          isOpen={sidebarOpen}
                         />
                       </div>
                     </div>
 
-                    {/* ✅ Right Content (Run Form) */}
                     <div className='flex-1 flex items-center justify-center p-6'>
                       <RunForm
                         selectedRun={selectedRun}
@@ -110,13 +104,11 @@ function App() {
                         addRunToList={(newRun) =>
                           setRuns((prevRuns) => [newRun, ...prevRuns])
                         }
-                        clearActiveRun={clearActiveRun} // ✅ Pass clearActiveRun to RunForm
+                        clearActiveRun={clearActiveRun}
                       />
                     </div>
 
-                    {/* ✅ Floating Buttons (Bottom Right) */}
                     <div className='fixed bottom-4 right-4 flex flex-col space-y-3 items-end'>
-                      {/* Add Run Button */}
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}

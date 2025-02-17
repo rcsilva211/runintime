@@ -11,6 +11,8 @@ import {
 } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaTimes } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { setRuns } from "../redux/runsSlice";
 
 const sports = [
   { label: "🏃‍➡️ - Running", value: "running", emoji: "🏃‍♂️" },
@@ -20,9 +22,11 @@ const sports = [
 
 const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
   const [loading, setLoading] = useState(true);
-  const [runs, setRuns] = useState([]);
   const [activeRun, setActiveRun] = useState(null);
   const [deleteRunId, setDeleteRunId] = useState(null);
+
+  const dispatch = useDispatch();
+  const runs = useSelector((state) => state.runs.runs);
 
   useEffect(() => {
     if (user) {
@@ -38,13 +42,14 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
         }));
 
         runsData.sort((a, b) => new Date(a.date) - new Date(b.date));
-        setRuns(runsData);
+
+        dispatch(setRuns(runsData)); // Store in Redux
         setLoading(false);
       });
 
       return () => unsubscribe();
     }
-  }, [user]);
+  }, [user, dispatch]);
 
   if (loading) {
     return (
@@ -66,14 +71,13 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
     if (!deleteRunId) return;
     try {
       await deleteDoc(doc(db, "runs", deleteRunId));
-      setRuns((prevRuns) => prevRuns.filter((run) => run.id !== deleteRunId));
+      dispatch(setRuns(runs.filter((run) => run.id !== deleteRunId))); // Update Redux state
     } catch (error) {
       console.error("Error deleting run:", error);
     }
     setDeleteRunId(null);
   };
 
-  /** ✅ Group Runs by Month and Calculate Total Distance */
   const groupedRuns = runs.reduce((acc, run) => {
     const month = getMonthYear(run.date);
     if (!acc[month]) acc[month] = { totalDistance: 0, runs: [] };
@@ -82,7 +86,6 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
     return acc;
   }, {});
 
-  /** ✅ Close sidebar when clicking outside */
   const handleOverlayClick = (e) => {
     if (!e.target.closest(".sidebar")) {
       closeSidebar();
@@ -93,7 +96,6 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* ✅ Clickable Background to Close Sidebar */}
           <motion.div
             className='fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden'
             initial={{ opacity: 0 }}
@@ -102,7 +104,6 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
             onClick={handleOverlayClick}
           />
 
-          {/* ✅ Sidebar Container */}
           <motion.div
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
@@ -110,11 +111,9 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
             transition={{ duration: 0.3 }}
             className='fixed top-0 left-0 w-full md:w-auto bg-white shadow-lg z-50 flex flex-col h-screen md:relative md:max-w-lg sidebar'
           >
-            {/* ✅ Header with Close Button */}
             <div className='sticky top-0 bg-white p-4 flex items-center justify-between border-b'>
               <h2 className='text-2xl font-bold text-gray-900'>Run History</h2>
 
-              {/* ✅ Close Button (Mobile Only) */}
               <button
                 onClick={closeSidebar}
                 className='md:hidden bg-gray-800 text-white p-2 rounded-md'
@@ -123,7 +122,6 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
               </button>
             </div>
 
-            {/* ✅ Scrollable Runs List */}
             <div className='flex-1 overflow-y-auto px-4 py-2'>
               {runs.length === 0 && (
                 <div className='text-center text-gray-500 text-lg'>
@@ -154,18 +152,18 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
                             whileTap={{ scale: 0.98 }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedRun(run); // ✅ Set selected run first
+                              setSelectedRun(run);
                               setActiveRun(run.id);
                               setTimeout(() => {
-                                closeSidebar(); // ✅ Close sidebar AFTER selecting the run
-                              }, 100); // Small delay to ensure UI updates smoothly
+                                closeSidebar();
+                              }, 100);
                             }}
                             className={`relative p-4 rounded-lg shadow-md cursor-pointer transition-all run-item 
                             ${
                               activeRun === run.id
                                 ? "bg-red-600 text-white"
                                 : "bg-gray-100 hover:bg-gray-300 text-black"
-                            }`} // ✅ Highlight active run with red background
+                            }`}
                           >
                             {/* ✅ Delete Button */}
                             <motion.button
@@ -196,7 +194,6 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
                               </span>
                             </p>
 
-                            {/* ✅ Sport Emoji in Bottom Right Corner */}
                             <span className='absolute bottom-2 right-2 text-2xl'>
                               {sportEmoji}
                             </span>
@@ -209,7 +206,7 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
               )}
             </div>
           </motion.div>
-          {/* ✅ Delete Confirmation Modal */}
+
           <AnimatePresence>
             {deleteRunId && (
               <motion.div
@@ -254,14 +251,12 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
           </AnimatePresence>
         </>
       )}
-      {/* ✅ Sidebar Container for Desktop */}
+
       <div className='hidden top-8 md:flex md:flex-col md:relative md:max-w-lg sidebar'>
-        {/* ✅ Header */}
         <div className='sticky top-0 bg-white p-4 flex items-center justify-between border-b'>
           <h2 className='text-2xl font-bold text-gray-900'>Run History</h2>
         </div>
 
-        {/* ✅ Scrollable Runs List */}
         <div className='flex-1 overflow-y-auto px-4 py-2'>
           {runs.length === 0 && (
             <div className='text-center text-gray-500 text-lg'>
@@ -291,7 +286,7 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
                         whileTap={{ scale: 0.98 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedRun(run); // ✅ Set selected run first
+                          setSelectedRun(run);
                           setActiveRun(run.id);
                         }}
                         className={`relative p-4 rounded-lg shadow-md cursor-pointer transition-all run-item 
@@ -299,9 +294,8 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
                           activeRun === run.id
                             ? "bg-red-600 text-white"
                             : "bg-gray-100 hover:bg-gray-300 text-black"
-                        }`} // ✅ Highlight active run with red background
+                        }`}
                       >
-                        {/* ✅ Delete Button */}
                         <motion.button
                           whileHover={{ scale: 1.2 }}
                           whileTap={{ scale: 0.9 }}
@@ -330,7 +324,6 @@ const RunList = ({ setSelectedRun, user, closeSidebar, isOpen }) => {
                           </span>
                         </p>
 
-                        {/* ✅ Sport Emoji in Bottom Right Corner */}
                         <span className='absolute bottom-2 right-2 text-2xl'>
                           {sportEmoji}
                         </span>

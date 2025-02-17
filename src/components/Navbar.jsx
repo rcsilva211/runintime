@@ -2,10 +2,24 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 import { FaUserCircle } from "react-icons/fa";
+import { db } from "../../firebase";
+import { useSelector } from "react-redux";
+import { doc, getDoc } from "firebase/firestore";
 
 const Navbar = ({ user, handleLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userName, setUserName] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
+
+  const runs = useSelector((state) => state.runs.runs);
+
+  const totalDistance = runs.reduce(
+    (sum, run) => sum + parseFloat(run.distance),
+    0
+  );
+  const totalSpeed = runs.reduce((sum, run) => sum + parseFloat(run.speed), 0);
+  const averageSpeed =
+    runs.length > 0 ? (totalSpeed / runs.length).toFixed(2) : 0;
 
   useEffect(() => {
     const storedProfilePicture = localStorage.getItem(
@@ -14,6 +28,18 @@ const Navbar = ({ user, handleLogout }) => {
     if (storedProfilePicture) {
       setProfilePicture(storedProfilePicture);
     }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (user?.uid) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setUserName(userDoc.data().name);
+        }
+      }
+    };
+    fetchUserName();
   }, [user]);
 
   const handleImageUpload = (event) => {
@@ -67,7 +93,7 @@ const Navbar = ({ user, handleLogout }) => {
         transition={{ duration: 0.3 }}
         className='fixed top-0 right-0 h-full w-72 bg-white shadow-lg p-6 z-50 flex flex-col'
       >
-        <h2 className='text-xl font-semibold mb-4'>Profile</h2>
+        <h2 className='text-xl font-semibold mb-4 text-gray-700'>Profile</h2>
 
         {/* ✅ Display Profile Picture */}
         <div className='flex justify-center mb-4'>
@@ -84,12 +110,18 @@ const Navbar = ({ user, handleLogout }) => {
 
         {/* ✅ Upload Button */}
         <input type='file' onChange={handleImageUpload} accept='image/*' />
-
+        {/* Display User Name */}
+        <p className='text-gray-700'>
+          <strong>Name:</strong> {userName || "Not set"}
+        </p>
         <p className='text-gray-700'>
           <strong>Email:</strong> {user.email}
         </p>
         <p className='text-gray-700'>
-          <strong>UID:</strong> {user.uid}
+          <strong>Total Distance:</strong> {totalDistance} km
+        </p>
+        <p className='text-gray-700'>
+          <strong>Average Speed:</strong> {averageSpeed} km/h
         </p>
 
         {/* ✅ Logout Button */}
